@@ -13,3 +13,8 @@ Just a small playground I scraped together for AER
 
 All without outrageous outliers in Precision/Recall/F1
 
+## Dataset
+Kaggle dataset: https://www.notion.so/Datasets-516aa813208e4786a86c59a05780fde7#0f32419dc10043d5bea93052b6a816f2
+Set in folder `assets/archive`
+
+Data for the transfer learning approach is generated from those audio files and are located in `plots`

@@ -197,10 +197,10 @@ def model(df_combined):
     print(dummy_clf.score(X_test2, y_test2))
     # print(X_train2[:9])
 
-    clf = tree.DecisionTreeClassifier()
-    clf = clf.fit(X_train2, y_train2)
-    clf.predict(X_test2)
-    print(clf.score(X_test2, y_test2))
+    # clf = tree.DecisionTreeClassifier()
+    # clf = clf.fit(X_train2, y_train2)
+    # clf.predict(X_test2)
+    # print(clf.score(X_test2, y_test2))
 
     return X_train, X_test, y_train, y_test, X_train2, X_test2, y_train2, y_test2, lb
 

@@ -1,0 +1,26 @@
+Accuracy of the model is -  61.84971332550049 %
+    Actual Values Predicted Values
+140  surprise      happy
+141  surprise      surprise
+142  angry         angry
+143  neutral       sad
+144  sad           neutral
+145  surprise      happy
+146  sad           angry
+147  angry         happy
+148  happy         sad
+149  surprise      happy
+              precision    recall  f1-score   support
+
+       angry       0.72      0.74      0.73        38
+       happy       0.63      0.65      0.64        40
+     neutral       0.65      0.46      0.54        24
+         sad       0.44      0.66      0.53        35
+    surprise       0.79      0.53      0.63        36
+
+    accuracy                           0.62       173
+   macro avg       0.65      0.61      0.61       173
+weighted avg       0.65      0.62      0.62       173
+
+
+Process finished with exit code 0

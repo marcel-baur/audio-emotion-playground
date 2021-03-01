@@ -118,23 +118,23 @@ def extract_featrues(audio_df):
         log_spectrogram = np.mean(db_spec, axis=0)
 
         # Mel-frequency cepstral coefficients (MFCCs)
-        #     mfcc = librosa.feature.mfcc(y=X, sr=sample_rate, n_mfcc=13)
-        #     mfcc=np.mean(mfcc,axis=0)
+        mfcc = librosa.feature.mfcc(y=X, sr=sample_rate, n_mfcc=13)
+        mfcc=np.mean(mfcc,axis=0)
 
         # compute chroma energy (pertains to 12 different pitch classes)
         #     chroma = librosa.feature.chroma_stft(y=X, sr=sample_rate)
         #     chroma = np.mean(chroma, axis = 0)
 
         # compute spectral contrast
-        #     contrast = librosa.feature.spectral_contrast(y=X, sr=sample_rate)
-        #     contrast = np.mean(contrast, axis= 0)
+        contrast = librosa.feature.spectral_contrast(y=X, sr=sample_rate)
+        contrast = np.mean(contrast, axis= 0)
 
         # compute zero-crossing-rate (zcr:the zcr is the rate of sign changes along a signal i.e.m the rate at
         #     which the signal changes from positive to negative or back - separation of voiced andunvoiced speech.)
         #     zcr = librosa.feature.zero_crossing_rate(y=X)
         #     zcr = np.mean(zcr, axis= 0)
 
-        df.loc[counter] = [log_spectrogram]
+        df.loc[counter] = [mfcc]
         counter = counter + 1
 
     print(len(df))
@@ -146,7 +146,7 @@ def extract_featrues(audio_df):
 
     print(df_combined.head())
 
-    with open('plots/labeled_data.pkl', 'wb') as f:
+    with open('plots/labeled_data_mfcc.pkl', 'wb') as f:
         pickle.dump(df_combined, f)
     return df_combined
 
@@ -220,7 +220,7 @@ def tf_model(X_train, X_test, y_train, y_test, lb):
     model.add(layers.Flatten())
     model.add(layers.Dense(256, activation='relu'))
     model.add(layers.Dropout(0.4))
-    model.add(layers.Dense(8, activation='sigmoid'))
+    model.add(layers.Dense(5, activation='sigmoid'))
     opt = keras.optimizers.Adam(lr=0.001)
     model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=['accuracy'])
     model.summary()
@@ -228,7 +228,13 @@ def tf_model(X_train, X_test, y_train, y_test, lb):
     checkpoint = ModelCheckpoint("best_initial_model.hdf5", monitor='val_accuracy', verbose=1,
                                  save_best_only=True, mode='max', period=1, save_weights_only=True)
 
-    model_history = model.fit(X_train, y_train, batch_size=32, epochs=40, validation_data=(X_test, y_test),
+    X_test = np.asarray(X_test).astype('float32')
+    X_train = np.asarray(X_train).astype('float32')
+
+    y_test = np.asarray(y_test).astype('float32')
+    y_train = np.asarray(y_train).astype('float32')
+
+    model_history = model.fit(X_train, y_train, batch_size=32, epochs=50, validation_data=(X_test, y_test),
                               callbacks=[checkpoint])
 
     plt.plot(model_history.history['accuracy'])
@@ -283,7 +289,7 @@ def tf_model(X_train, X_test, y_train, y_test, lb):
     plt.show()
 
     print(classification_report(actual, predictions,
-                                target_names=['angry', 'calm', 'disgust', 'fear', 'happy', 'neutral', 'sad',
+                                target_names=['angry', 'happy', 'neutral', 'sad',
                                               'surprise']))
 
 
@@ -295,9 +301,15 @@ def hyperparameter_training(df_combined):
     y_train = train.iloc[:, :2].drop(columns=['gender'])
     print(X_train.shape)
 
+    print(X_train)
+    X_train = X_train.drop(columns=['img_path'])
+
+
     X_test = test.iloc[:, 3:]
     y_test = test.iloc[:, :2].drop(columns=['gender'])
     print(X_test.shape)
+    X_test = X_test.drop(columns=['img_path'])
+
 
     mean = np.mean(X_train, axis=0)
     std = np.std(X_train, axis=0)
@@ -308,6 +320,12 @@ def hyperparameter_training(df_combined):
     y_train = np.array(y_train)
     X_test = np.array(X_test)
     y_test = np.array(y_test)
+
+    # X_test = np.asarray(X_test).astype('float32')
+    # X_train = np.asarray(X_train).astype('float32')
+
+    # y_test = np.asarray(y_test).astype('float32')
+    # y_train = np.asarray(y_train).astype('float32')
 
     X_train = X_train[:, :, np.newaxis]
     X_test = X_test[:, :, np.newaxis]
@@ -442,14 +460,21 @@ def transform_image_data(df_combined):
 
 if __name__ == '__main__':
     plt.style.use('fivethirtyeight')
-    # audio_df = preprocessing()
+    audio_df = preprocessing()
     # audio_df.emotion.value_counts().plot(kind='bar')
     # plt.show()
     # data = extract_featrues(audio_df)
     # preprocessing()
-    data = pickle.load(open("plots/labeled_data.pkl", 'rb'))
+    data = extract_featrues(audio_df)
+    # data = pickle.load(open("plots/labeled_data.pkl", 'rb'))
+    print(data.head())
+    # hyperparameter_training(data)
     # x_train, x_test, y_train, y_test = transform_image_data(data)
     # transfer_vgg16(x_train, x_test, y_train, y_test)
+    data = data.drop(columns=['img_path'])
+    data = data[data.emotion != 'fear']
+    data = data[data.emotion != 'disgust']
+    data = data[data.emotion != 'calm']
     X_train, X_test, y_train, y_test, X_train2, X_test2, y_train2, y_test2, lb = model(data)
     tf_model(X_train, X_test, y_train, y_test, lb)
     # hyperparameter_training(data)
